@@ -12,6 +12,7 @@ cleaned as (
         cast(fee_gbp as double)            as fee_gbp,
         cast(refund_gbp as double)         as refund_gbp,
         cast(finance_provider as varchar)  as finance_provider,
+        lower(trim(acquisition_channel))   as acquisition_channel,
         cast(sold_at as timestamp)         as sold_at
     from source
 )

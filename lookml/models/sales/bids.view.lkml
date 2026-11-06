@@ -1,3 +1,4 @@
+# SALES view: bid activity. Only the sales model includes it.
 view: bids {
   sql_table_name: marts.fct_bids ;;
 

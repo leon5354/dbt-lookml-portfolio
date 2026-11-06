@@ -14,3 +14,4 @@ sources:
       - name: raw_dealers
       - name: raw_deals
       - name: raw_bids
+      - name: raw_marketing_spend

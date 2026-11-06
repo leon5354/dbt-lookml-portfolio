@@ -1,8 +1,8 @@
-# VIEW FILE: one table's fields. Built on dbt's marts.fct_deals.
+# CORE VIEW: what a "deal" is, for everyone. Dimensions and ONE shared measure.
+# Each business function adds its own measures with a refinement (view: +deals).
+# Built on dbt's marts.fct_deals.
 view: deals {
   sql_table_name: marts.fct_deals ;;
-
-  # ---------- DIMENSIONS: things to group or filter by ----------
 
   dimension: deal_id {
     primary_key: yes       # makes sums safe across joins
@@ -25,7 +25,13 @@ view: deals {
   dimension: region {
     type: string
     sql: ${TABLE}.region ;;
-    description: "Seller's region"
+    description: "Seller region"
+  }
+
+  dimension: acquisition_channel {
+    type: string
+    sql: ${TABLE}.acquisition_channel ;;
+    description: "Marketing channel that brought the deal in"
   }
 
   dimension: is_finance {
@@ -48,38 +54,10 @@ view: deals {
     sql: ${TABLE}.sold_at ;;
   }
 
-  # ---------- MEASURES: things to add up ----------
-
+  # The one measure every team must agree on. Defined once, here.
   measure: deal_count {
     type: count_distinct
     sql: ${deal_id} ;;
     drill_fields: [deal_id, car, region, sold_date]
-  }
-
-  measure: total_revenue {
-    type: sum
-    sql: ${TABLE}.net_revenue_gbp ;;
-    value_format_name: gbp_0
-    description: "Fee earned minus refunds. The row-level rule is in dbt."
-  }
-
-  measure: average_price {
-    type: average
-    sql: ${TABLE}.final_price_gbp ;;
-    value_format_name: gbp_0
-  }
-
-  # A filtered measure.
-  measure: finance_deals {
-    type: count_distinct
-    sql: ${deal_id} ;;
-    filters: [is_finance: "yes"]
-  }
-
-  # type: number means "built from measures that are already added up".
-  measure: finance_share {
-    type: number
-    sql: 1.0 * ${finance_deals} / NULLIF(${deal_count}, 0) ;;
-    value_format_name: percent_1
   }
 }

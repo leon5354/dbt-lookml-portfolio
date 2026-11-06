@@ -25,10 +25,19 @@ models:
       - name: region
         data_type: varchar
         description: "Seller's region, upper case."
+      - name: acquisition_channel
+        data_type: varchar
+        description: "Marketing channel that brought the deal in."
       - name: sold_at
         data_type: timestamp
       - name: final_price_gbp
         data_type: double
+      - name: fee_gbp
+        data_type: double
+        description: "Marketplace fee charged on the deal."
+      - name: refund_gbp
+        data_type: double
+        description: "Fee refunded. Null in the source becomes 0 here."
       - name: net_revenue_gbp
         data_type: double
         description: "Fee earned minus any refund. Row-level rule, so it lives in dbt."
@@ -57,6 +66,15 @@ models:
                 to: ref('fct_deals')
                 field: deal_id
 
+  - name: fct_marketing_spend
+    description: "One row per channel per month. Spend and leads."
+    columns:
+      - name: spend_id
+        description: "Primary key (channel plus month)."
+        data_tests: [unique, not_null]
+      - name: spend_gbp
+        data_tests: [positive_value]
+
   - name: dim_dealers
     description: "One row per dealer, current state."
     columns:
@@ -67,29 +85,49 @@ models:
 # Looker isn't part of the dbt DAG, because dbt doesn't build it.
 # Exposures are labels that show what uses our models. They run nothing, but
 # they add the Looker layer to the end of the lineage graph.
+# One exposure per LookML model, so you can see which business function breaks.
 exposures:
-  - name: looker_deals_explore
-    label: Looker Deals Explore
+  - name: looker_sales_model
+    label: Looker Sales Model
     type: analysis
     maturity: medium
-    description: "Looker explore in lookml/carmart.model.lkml, joining deals, dealers and bids."
-    depends_on:
-      - ref('fct_deals')
-      - ref('fct_bids')
-      - ref('dim_dealers')
-    owner:
-      name: Analytics Engineering
-      email: analytics@example.com
+    description: "lookml/models/sales: deals, dealers and bids."
+    depends_on: [ref('fct_deals'), ref('fct_bids'), ref('dim_dealers')]
+    owner: {name: Analytics Engineering, email: analytics@example.com}
+
+  - name: looker_marketing_model
+    label: Looker Marketing Model
+    type: analysis
+    maturity: medium
+    description: "lookml/models/marketing: channel spend against deals."
+    depends_on: [ref('fct_marketing_spend'), ref('fct_deals')]
+    owner: {name: Analytics Engineering, email: analytics@example.com}
+
+  - name: looker_finance_model
+    label: Looker Finance Model
+    type: analysis
+    maturity: medium
+    description: "lookml/models/finance: fees, refunds and revenue."
+    depends_on: [ref('fct_deals'), ref('dim_dealers')]
+    owner: {name: Analytics Engineering, email: analytics@example.com}
 
   - name: sales_overview_dashboard
     label: Sales Overview
     type: dashboard
     maturity: medium
-    description: "Looker dashboard built on the deals explore."
-    depends_on:
-      - ref('fct_deals')
-      - ref('fct_bids')
-      - ref('dim_dealers')
-    owner:
-      name: Analytics Engineering
-      email: analytics@example.com
+    depends_on: [ref('fct_deals'), ref('fct_bids'), ref('dim_dealers')]
+    owner: {name: Analytics Engineering, email: analytics@example.com}
+
+  - name: marketing_performance_dashboard
+    label: Marketing Performance
+    type: dashboard
+    maturity: medium
+    depends_on: [ref('fct_marketing_spend'), ref('fct_deals')]
+    owner: {name: Analytics Engineering, email: analytics@example.com}
+
+  - name: finance_summary_dashboard
+    label: Finance Summary
+    type: dashboard
+    maturity: medium
+    depends_on: [ref('fct_deals'), ref('dim_dealers')]
+    owner: {name: Analytics Engineering, email: analytics@example.com}

@@ -25,6 +25,11 @@ models:
           - accepted_values:
               arguments:
                 values: [LONDON, MIDLANDS, NORTH]
+      - name: acquisition_channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [search, social, referral]
       - name: dealer_id
         data_tests:
           - relationships:
@@ -46,3 +51,10 @@ models:
               arguments:
                 to: ref('stg_deals')
                 field: deal_id
+
+  - name: stg_marketing_spend
+    description: "One row per channel per month. Cleaned copy of raw_marketing_spend."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [channel, spend_month]

@@ -1,19 +1,15 @@
-# MODEL FILE: the connection, the caching rule and what users can open.
+# SALES MODEL: what the sales team can open. Core views plus sales-only views.
 connection: "bigquery_prod"
-include: "/views/*.view.lkml"
-include: "/dashboards/*.dashboard.lookml"
+include: "/models/core/datagroups.lkml"
+include: "/models/core/*.view.lkml"
+include: "/models/sales/*.view.lkml"
+include: "/dashboards/sales_overview.dashboard.lookml"
 
-# Clear the cache when dbt finishes, not on a blind timer.
-datagroup: dbt_finished {
-  sql_trigger: SELECT MAX(run_finished_at) FROM ops.dbt_runs ;;
-  max_cache_age: "24 hours"
-}
 persist_with: dbt_finished
 
-# An explore is the starting point users see.
 explore: deals {
-  label: "Deals"
-  description: "One row per sold car. Start here for revenue."
+  label: "Sales: Deals"
+  description: "One row per sold car. Start here for volume, price and bids."
 
   # Forces a date filter, so nobody scans all of history by accident.
   always_filter: {

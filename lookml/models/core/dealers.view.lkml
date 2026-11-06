@@ -1,3 +1,4 @@
+# CORE view: dealers, shared by sales and finance.
 view: dealers {
   sql_table_name: marts.dim_dealers ;;
 
