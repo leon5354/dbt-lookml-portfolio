@@ -14,8 +14,12 @@ view: marketing_spend {
     sql: ${TABLE}.channel ;;
   }
 
+  # spend_month is a DATE, not a timestamp. Without these two lines,
+  # Looker treats it as a timestamp, which breaks on BigQuery.
   dimension_group: spend {
     type: time
+    datatype: date
+    convert_tz: no
     timeframes: [raw, month]
     sql: ${TABLE}.spend_month ;;
   }
