@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: int_bid_stats
+    description: "One row per deal. Bid count and top bid."

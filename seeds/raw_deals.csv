@@ -1,0 +1,6 @@
+deal_id,car,seller_region,dealer_id,final_price_gbp,fee_gbp,refund_gbp,finance_provider,sold_at,_loaded_at
+A,Golf,london,D3,9500,100,,,2026-09-01 10:00:00,2026-10-01 06:00:00
+B,Civic,Midlands,D2,14000,150,,BlackHorse,2026-09-03 11:30:00,2026-10-01 06:00:00
+C,Corsa, north ,D1,6200,80,80,,2026-09-10 15:00:00,2026-10-01 06:00:00
+D,Model 3,london,D1,21000,220,,Santander,2026-09-20 09:15:00,2026-10-01 06:00:00
+E,Fiesta,north,D3,7100,90,,,2026-09-28 16:45:00,2026-10-01 06:00:00

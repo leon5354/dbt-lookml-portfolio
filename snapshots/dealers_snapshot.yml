@@ -1,0 +1,10 @@
+# SCD Type 2: a new row whenever a dealer changes, with valid-from and valid-to.
+# Lets you report revenue by the plan a dealer had at the time.
+snapshots:
+  - name: dealers_snapshot
+    relation: ref('stg_dealers')
+    config:
+      schema: snapshots
+      unique_key: dealer_id
+      strategy: timestamp
+      updated_at: updated_at

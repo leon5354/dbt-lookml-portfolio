@@ -1,0 +1,48 @@
+version: 2
+
+# Tests and docs for staging. Each column test is a "generic" data test.
+models:
+  - name: stg_dealers
+    description: "One row per dealer. Cleaned copy of raw_dealers."
+    columns:
+      - name: dealer_id
+        description: "Primary key."
+        data_tests: [unique, not_null]
+      - name: plan
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [gold, silver]
+
+  - name: stg_deals
+    description: "One row per sold car. Cleaned copy of raw_deals."
+    columns:
+      - name: deal_id
+        description: "Primary key."
+        data_tests: [unique, not_null]
+      - name: region
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [LONDON, MIDLANDS, NORTH]
+      - name: dealer_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_dealers')
+                field: dealer_id
+
+  - name: stg_bids
+    description: "One row per bid. Cleaned copy of raw_bids."
+    columns:
+      - name: bid_id
+        description: "Primary key."
+        data_tests: [unique, not_null]
+      - name: amount_gbp
+        data_tests: [positive_value]      # custom generic test, see tests/generic/
+      - name: deal_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_deals')
+                field: deal_id

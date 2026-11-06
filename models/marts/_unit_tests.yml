@@ -1,0 +1,56 @@
+version: 2
+
+# Unit tests check the LOGIC with fake rows, before the model is built.
+# Data tests check the REAL data, after it is built.
+unit_tests:
+  - name: net_revenue_subtracts_refund_and_handles_null
+    description: "A missing refund must count as 0, not turn revenue into null."
+    model: fct_deals
+    given:
+      - input: ref('stg_deals')
+        rows:
+          - {deal_id: X, fee_gbp: 100, refund_gbp: 30}
+          - {deal_id: Y, fee_gbp: 100, refund_gbp: null}
+      - input: ref('int_bid_stats')
+        format: sql           # ephemeral inputs must be mocked with SQL
+        rows: |
+          select cast(null as varchar) as deal_id, 0 as bid_count, 0.0 as top_bid_gbp where 1 = 0
+    expect:
+      rows:
+        - {deal_id: X, net_revenue_gbp: 70}
+        - {deal_id: Y, net_revenue_gbp: 100}
+
+  - name: deal_with_no_bids_gets_zero_not_null
+    model: fct_deals
+    given:
+      - input: ref('stg_deals')
+        rows:
+          - {deal_id: X, fee_gbp: 100}
+      - input: ref('int_bid_stats')
+        format: sql
+        rows: |
+          select cast(null as varchar) as deal_id, 0 as bid_count, 0.0 as top_bid_gbp where 1 = 0
+    expect:
+      rows:
+        - {deal_id: X, bid_count: 0}
+
+  - name: incremental_keeps_only_recent_bids
+    description: "Runs the is_incremental path: old bids are skipped, late ones are kept."
+    model: fct_bids
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: ref('stg_bids')
+        rows:
+          - {bid_id: "1", bid_at: "2026-09-01 10:00:00"}
+          - {bid_id: "2", bid_at: "2026-09-28 10:00:00"}
+          - {bid_id: "3", bid_at: "2026-09-30 10:00:00"}
+      - input: this           # mocks the existing table. SQL format works before it exists.
+        format: sql
+        rows: |
+          select cast('2026-09-30 12:00:00' as timestamp) as bid_at
+    expect:
+      rows:
+        - {bid_id: "2"}
+        - {bid_id: "3"}

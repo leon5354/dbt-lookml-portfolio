@@ -1,0 +1,16 @@
+version: 2
+
+# Sources are raw tables dbt does not build. Declaring them gives lineage and
+# freshness checks. Run the check with: dbt source freshness
+sources:
+  - name: carmart
+    schema: raw
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: {count: 24, period: hour}
+        error_after: {count: 3650, period: day}   # seed dates are fixed, so this stays a warning
+    tables:
+      - name: raw_dealers
+      - name: raw_deals
+      - name: raw_bids

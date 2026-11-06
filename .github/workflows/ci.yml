@@ -1,0 +1,45 @@
+# CI: runs on every pull request. If any step fails, the PR can't merge
+# (once the branch is protected in GitHub settings).
+name: dbt and LookML checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tools
+        run: pip install -r requirements.txt
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Load raw data
+        run: dbt seed
+
+      # Builds everything in DAG order, with unit and data tests.
+      # A failed test skips everything downstream of it.
+      - name: Build and test
+        run: dbt build
+
+      # catalog.json lists the real columns, which the LookML check reads.
+      - name: Generate docs
+        run: dbt docs generate
+
+      - name: Check LookML against dbt
+        run: python scripts/check_lookml.py
+
+# Real projects use slim CI, so only what changed gets built:
+#
+#   - name: Download production manifest
+#     run: <copy manifest.json from production into prod-artifacts/>
+#   - name: Build changed models and their children
+#     run: dbt build --select state:modified+ --defer --state prod-artifacts

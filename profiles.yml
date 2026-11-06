@@ -1,0 +1,18 @@
+# Connection settings. Real projects keep this outside the repo.
+# dev runs on your PC with DuckDB, so you need no cloud account.
+carmart:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: dev.duckdb
+      threads: 4
+
+    # What the same thing looks like on BigQuery. Not used here.
+    # prod:
+    #   type: bigquery
+    #   method: oauth
+    #   project: my-gcp-project
+    #   dataset: analytics
+    #   threads: 8
+    #   maximum_bytes_billed: 100000000000   # stops any query scanning over 100 GB

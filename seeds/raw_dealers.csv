@@ -1,0 +1,4 @@
+dealer_id,dealer_name,region,plan,updated_at,_loaded_at
+D1,Northside Motors,london,gold,2026-01-05 09:00:00,2026-10-01 06:00:00
+D2,Midlands Cars,Midlands,silver,2026-02-10 09:00:00,2026-10-01 06:00:00
+D3,Peak Autos, north ,gold,2026-03-15 09:00:00,2026-10-01 06:00:00

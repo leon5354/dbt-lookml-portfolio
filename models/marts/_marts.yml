@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: fct_deals
+    description: "One row per sold car. Base table for the Looker deals explore."
+    config:
+      contract:
+        enforced: true        # a changed column name or type fails the build
+    columns:
+      - name: deal_id
+        data_type: varchar
+        description: "Primary key. Looker's primary_key depends on this being unique."
+        data_tests: [unique, not_null]
+      - name: dealer_id
+        data_type: varchar
+        description: "Winning dealer."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_dealers')
+                field: dealer_id
+      - name: car
+        data_type: varchar
+      - name: region
+        data_type: varchar
+        description: "Seller's region, upper case."
+      - name: sold_at
+        data_type: timestamp
+      - name: final_price_gbp
+        data_type: double
+      - name: net_revenue_gbp
+        data_type: double
+        description: "Fee earned minus any refund. Row-level rule, so it lives in dbt."
+      - name: is_finance
+        data_type: boolean
+        description: "True if the buyer used finance."
+      - name: bid_count
+        data_type: bigint
+      - name: top_bid_gbp
+        data_type: double
+
+  - name: fct_bids
+    description: "One row per bid. Incremental."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [deal_id, dealer_id, bid_at]
+    columns:
+      - name: bid_id
+        description: "Primary key."
+        data_tests: [unique, not_null]
+      - name: deal_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('fct_deals')
+                field: deal_id
+
+  - name: dim_dealers
+    description: "One row per dealer, current state."
+    columns:
+      - name: dealer_id
+        description: "Primary key."
+        data_tests: [unique, not_null]
+
+# Looker isn't part of the dbt DAG, because dbt doesn't build it.
+# Exposures are labels that show what uses our models. They run nothing, but
+# they add the Looker layer to the end of the lineage graph.
+exposures:
+  - name: looker_deals_explore
+    label: Looker Deals Explore
+    type: analysis
+    maturity: medium
+    description: "Looker explore in lookml/carmart.model.lkml, joining deals, dealers and bids."
+    depends_on:
+      - ref('fct_deals')
+      - ref('fct_bids')
+      - ref('dim_dealers')
+    owner:
+      name: Analytics Engineering
+      email: analytics@example.com
+
+  - name: sales_overview_dashboard
+    label: Sales Overview
+    type: dashboard
+    maturity: medium
+    description: "Looker dashboard built on the deals explore."
+    depends_on:
+      - ref('fct_deals')
+      - ref('fct_bids')
+      - ref('dim_dealers')
+    owner:
+      name: Analytics Engineering
+      email: analytics@example.com

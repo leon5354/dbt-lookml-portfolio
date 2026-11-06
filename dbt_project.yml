@@ -1,0 +1,29 @@
+# The project's control file. dbt reads this first.
+name: carmart
+version: "1.0.0"
+profile: carmart          # which connection to use, see profiles.yml
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+flags:
+  send_anonymous_usage_stats: false
+
+# Defaults by folder, so each model doesn't repeat them.
+seeds:
+  carmart:
+    +schema: raw          # seeds stand in for Fivetran loading raw tables
+
+models:
+  carmart:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +materialized: ephemeral   # no table is built, it is inlined as a CTE
+    marts:
+      +schema: marts
+      +materialized: table
